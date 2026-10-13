@@ -1,31 +1,27 @@
 #ifndef GAME_INTERFACES_H
 #define GAME_INTERFACES_H
-
 #include <iostream>
 #include <string>
-
 using namespace std;
 
 class Player;
 
-// 1. OCP: Interface for effects triggered by choices
 class IActionEffect {
 public:
-    virtual ~IActionEffect() {}
+    virtual ~IActionEffect() = default;
     virtual void apply(Player& player) = 0;
 };
 
-// 3. DIP: Interface for console output
 class IOutputWriter {
 public:
-    virtual ~IOutputWriter() {}
-    virtual void write(string message) = 0;
+    virtual ~IOutputWriter() = default;
+    virtual void write(const string& message) = 0;
 };
 
-class ConsoleWriter : public IOutputWriter {
+class ConsoleWriter final : public IOutputWriter {
 public:
-    void write(string message) {
-        cout << message << "\n";
+    void write(const string& message) override {
+        cout << message << '\n';
     }
 };
 

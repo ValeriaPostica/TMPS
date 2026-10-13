@@ -1,0 +1,185 @@
+{
+  "startNodeId": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "text": "You wake up in a rainy alley in Sector 7. A merchant sells gear, a hacker waves at you, and a gang member stares you down.",
+      "choices": [
+        {"description": "Buy a Neural Chip ($80)", "nextNodeId": 2, "effects": [{"type": "stat", "money": -80, "intelligence": 15}, {"type": "item", "item": "Neural Chip"}]},
+        {"description": "Buy a Medkit and Stun Gun ($90)", "nextNodeId": 3, "effects": [{"type": "stat", "money": -90, "reputation": 5}, {"type": "item", "item": "Medkit"}, {"type": "item", "item": "Stun Gun"}]},
+        {"description": "Follow the street hacker to a bar", "nextNodeId": 4, "effects": [{"type": "stat", "intelligence": 5, "reputation": 10}]}
+      ]
+    },
+    {
+      "id": 2,
+      "text": "With your Neural Chip, you spot a weak point in the city bank network.",
+      "choices": [
+        {"description": "Hack bank servers directly", "nextNodeId": 5, "requiredIntelligence": 20, "effects": []},
+        {"description": "Sell the security flaw to a Netrunner clan", "nextNodeId": 6, "effects": [{"type": "stat", "money": 500, "intelligence": 5, "reputation": 10}]},
+        {"description": "Apply for a C++ developer job at Megacorp", "nextNodeId": 7, "effects": [{"type": "stat", "money": 200, "intelligence": 10, "reputation": 5}]}
+      ]
+    },
+    {
+      "id": 3,
+      "text": "A group of street bandits approaches you to steal your money.",
+      "choices": [
+        {"description": "Use Stun Gun on their leader", "nextNodeId": 8, "requiredItem": "Stun Gun", "effects": [{"type": "stat", "health": -10, "money": 300, "reputation": 25}]},
+        {"description": "Give them $50 and run away", "nextNodeId": 9, "effects": [{"type": "stat", "health": -10, "money": -50, "reputation": -5}]},
+        {"description": "Bribe them with your Medkit for passage", "nextNodeId": 10, "requiredItem": "Medkit", "effects": [{"type": "stat", "reputation": 10}]}
+      ]
+    },
+    {
+      "id": 4,
+      "text": "At the bar, a fixer offers you a risky job stealing corporate data.",
+      "choices": [
+        {"description": "Accept the corporate heist job", "nextNodeId": 11, "effects": [{"type": "stat", "reputation": 15}]},
+        {"description": "Decline and work as bar security", "nextNodeId": 12, "effects": [{"type": "stat", "health": -10, "money": 200, "reputation": 5}]},
+        {"description": "Steal the fixer's Cyber-Deck while he looks away", "nextNodeId": 13, "effects": [{"type": "stat", "intelligence": 10, "reputation": -10}, {"type": "item", "item": "Cyber-Deck"}]}
+      ]
+    },
+    {
+      "id": 5,
+      "text": "Your hack works completely! You control millions in digital currency.",
+      "choices": [
+        {"description": "Transfer funds and buy an orbital palace", "nextNodeId": 14, "effects": []},
+        {"description": "Erase all debt records for Sector 7 citizens", "nextNodeId": 15, "effects": [{"type": "stat", "reputation": 50}]},
+        {"description": "Buy out Megacorp stock to become CEO", "nextNodeId": 16, "effects": []}
+      ]
+    },
+    {
+      "id": 6,
+      "text": "The Netrunners pay you and offer you a full membership.",
+      "choices": [
+        {"description": "Lead the Netrunner clan into a city war", "nextNodeId": 15, "effects": []},
+        {"description": "Invest the money into a tech company", "nextNodeId": 16, "effects": []},
+        {"description": "Gamble all earnings at an underground casino", "nextNodeId": 17, "effects": [{"type": "stat", "money": -500}]}
+      ]
+    },
+    {
+      "id": 7,
+      "text": "You get hired as a coder and work hard every single day.",
+      "choices": [
+        {"description": "Outsmart your boss to take the CEO chair", "nextNodeId": 16, "effects": []},
+        {"description": "Work 100-hour weeks without stopping", "nextNodeId": 18, "effects": [{"type": "stat", "health": -40, "money": 500, "intelligence": 10}]},
+        {"description": "Build an indie game on weekends", "nextNodeId": 19, "effects": [{"type": "stat", "health": 10, "money": 1000, "intelligence": 20, "reputation": 20}]}
+      ]
+    },
+    {
+      "id": 8,
+      "text": "You defeated the bandit leader! The street clans respect your strength.",
+      "choices": [
+        {"description": "Unite the street clans under your rule", "nextNodeId": 15, "effects": []},
+        {"description": "Demand monthly protection taxes from gangs", "nextNodeId": 16, "effects": []},
+        {"description": "Retire from violence and guard the local neighborhood", "nextNodeId": 19, "effects": []}
+      ]
+    },
+    {
+      "id": 9,
+      "text": "You escaped, but you lost money and street respect.",
+      "choices": [
+        {"description": "Beg for food in Sector 7 alleys", "nextNodeId": 17, "effects": []},
+        {"description": "Try to steal money from a market stall", "nextNodeId": 18, "effects": [{"type": "stat", "health": -50, "money": 20}]},
+        {"description": "Look for an entry-level cleaning job at Megacorp", "nextNodeId": 7, "effects": [{"type": "stat", "money": 50}]}
+      ]
+    },
+    {
+      "id": 10,
+      "text": "The bandits accept your Medkit and leave you alone.",
+      "choices": [
+        {"description": "Head to the bar to look for work", "nextNodeId": 4, "effects": []},
+        {"description": "Search the street trash for spare parts", "nextNodeId": 13, "effects": [{"type": "item", "item": "Cyber-Deck"}]},
+        {"description": "Sleep on a park bench to recover energy", "nextNodeId": 19, "effects": [{"type": "stat", "health": 20}]}
+      ]
+    },
+    {
+      "id": 11,
+      "text": "You sneak into the corporate vault, but security turrets activate!",
+      "choices": [
+        {"description": "Use a Cyber-Deck to disable turret code", "nextNodeId": 14, "requiredItem": "Cyber-Deck", "effects": []},
+        {"description": "Use a Medkit to patch wounds and run", "nextNodeId": 19, "requiredItem": "Medkit", "effects": [{"type": "stat", "health": 10}]},
+        {"description": "Try to charge through the turret fire", "nextNodeId": 20, "effects": [{"type": "stat", "health": -100}]}
+      ]
+    },
+    {
+      "id": 12,
+      "text": "You work quiet security shifts at the bar and save your money.",
+      "choices": [
+        {"description": "Buy the bar from the owner", "nextNodeId": 16, "effects": []},
+        {"description": "Live a simple, peaceful street life", "nextNodeId": 19, "effects": []},
+        {"description": "Use savings to buy a Neural Chip", "nextNodeId": 2, "effects": [{"type": "stat", "money": -80, "intelligence": 15}, {"type": "item", "item": "Neural Chip"}]}
+      ]
+    },
+    {
+      "id": 13,
+      "text": "You obtained a Cyber-Deck! You are ready for high-tier hacking.",
+      "choices": [
+        {"description": "Return to the corporate heist", "nextNodeId": 11, "effects": []},
+        {"description": "Sell the Cyber-Deck to the Netrunners", "nextNodeId": 6, "effects": [{"type": "stat", "money": 300}]},
+        {"description": "Study the Cyber-Deck's code", "nextNodeId": 5, "effects": [{"type": "stat", "intelligence": 15}]}
+      ]
+    },
+    {
+      "id": 14,
+      "text": "TECH BILLIONAIRE ENDING: You hacked the system and retired in ultimate luxury!",
+      "choices": [
+        {"description": "Accept your new life", "nextNodeId": 14, "effects": [{"type": "ending", "message": "TECH BILLIONAIRE ENDING: You mastered FAF City."}]},
+        {"description": "Celebrate with the citizens", "nextNodeId": 14, "effects": [{"type": "ending", "message": "TECH BILLIONAIRE ENDING: You mastered FAF City."}]},
+        {"description": "Close the story", "nextNodeId": 14, "effects": [{"type": "ending", "message": "TECH BILLIONAIRE ENDING: You mastered FAF City."}]}
+      ]
+    },
+    {
+      "id": 15,
+      "text": "CYBERPUNK LEGEND ENDING: You became the undisputed ruler of Sector 7!",
+      "choices": [
+        {"description": "Lead with honor", "nextNodeId": 15, "effects": [{"type": "ending", "message": "CYBERPUNK LEGEND ENDING: You became a city legend."}]},
+        {"description": "Protect the weak", "nextNodeId": 15, "effects": [{"type": "ending", "message": "CYBERPUNK LEGEND ENDING: You became a city legend."}]},
+        {"description": "Close the story", "nextNodeId": 15, "effects": [{"type": "ending", "message": "CYBERPUNK LEGEND ENDING: You became a city legend."}]}
+      ]
+    },
+    {
+      "id": 16,
+      "text": "CORPO CEO ENDING: You climbed to the top and now control Megacorp!",
+      "choices": [
+        {"description": "Sign the executive contract", "nextNodeId": 16, "effects": [{"type": "ending", "message": "CORPO CEO ENDING: You control Megacorp."}]},
+        {"description": "Reinvest in FAF City", "nextNodeId": 16, "effects": [{"type": "ending", "message": "CORPO CEO ENDING: You control Megacorp."}]},
+        {"description": "Close the story", "nextNodeId": 16, "effects": [{"type": "ending", "message": "CORPO CEO ENDING: You control Megacorp."}]}
+      ]
+    },
+    {
+      "id": 17,
+      "text": "BROKE ENDING: You lost your funds and ended up broke in FAF City.",
+      "choices": [
+        {"description": "Accept the consequences", "nextNodeId": 17, "effects": [{"type": "ending", "message": "BROKE ENDING: You survived, but lost everything."}]},
+        {"description": "Start over in the alleys", "nextNodeId": 17, "effects": [{"type": "ending", "message": "BROKE ENDING: You survived, but lost everything."}]},
+        {"description": "Close the story", "nextNodeId": 17, "effects": [{"type": "ending", "message": "BROKE ENDING: You survived, but lost everything."}]}
+      ]
+    },
+    {
+      "id": 18,
+      "text": "BURNT-OUT ENDING: You made money, but completely destroyed your health.",
+      "choices": [
+        {"description": "Rest at last", "nextNodeId": 18, "effects": [{"type": "ending", "message": "BURNT-OUT ENDING: You traded your health for success."}]},
+        {"description": "Leave the corporation", "nextNodeId": 18, "effects": [{"type": "ending", "message": "BURNT-OUT ENDING: You traded your health for success."}]},
+        {"description": "Close the story", "nextNodeId": 18, "effects": [{"type": "ending", "message": "BURNT-OUT ENDING: You traded your health for success."}]}
+      ]
+    },
+    {
+      "id": 19,
+      "text": "PERFECT ENDING: You balanced work, health, and wealth to live happily!",
+      "choices": [
+        {"description": "Enjoy a quiet evening", "nextNodeId": 19, "effects": [{"type": "ending", "message": "PERFECT ENDING: You found balance in FAF City."}]},
+        {"description": "Help another traveler", "nextNodeId": 19, "effects": [{"type": "ending", "message": "PERFECT ENDING: You found balance in FAF City."}]},
+        {"description": "Close the story", "nextNodeId": 19, "effects": [{"type": "ending", "message": "PERFECT ENDING: You found balance in FAF City."}]}
+      ]
+    },
+    {
+      "id": 20,
+      "text": "YOU DIED: You took too much damage from automated turrets.",
+      "choices": [
+        {"description": "Face the consequence", "nextNodeId": 20, "effects": [{"type": "ending", "message": "GAME OVER: The turrets ended your journey."}]},
+        {"description": "Remember the warning", "nextNodeId": 20, "effects": [{"type": "ending", "message": "GAME OVER: The turrets ended your journey."}]},
+        {"description": "Close the story", "nextNodeId": 20, "effects": [{"type": "ending", "message": "GAME OVER: The turrets ended your journey."}]}
+      ]
+    }
+  ]
+}

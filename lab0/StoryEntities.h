@@ -1,192 +1,146 @@
 #ifndef STORY_ENTITIES_H
 #define STORY_ENTITIES_H
-
-#include <iostream>
-#include <string>
-#include <vector>
 #include "GameInterfaces.h"
-
+#include <algorithm>
+#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 using namespace std;
 
-// 2. SRP: Player class handles only stats, items, and game state
 class Player {
 private:
-    string name;
-    int health;
-    int money;
-    int intelligence;
-    int reputation;
-    vector<string> inventory;
-    bool isGameOver;
-    string endingMessage;
+    string name_;
+    int health_ = 100;
+    int money_ = 100;
+    int intelligence_ = 10;
+    int reputation_ = 0;
+    vector<string> inventory_;
+    bool gameOver_ = false;
+    string endingMessage_;
 
 public:
-    Player(string n) {
-        name = n;
-        health = 100;
-        money = 100;
-        intelligence = 10;
-        reputation = 0;
-        isGameOver = false;
-        endingMessage = "";
-    }
+    explicit Player(string name) : name_(move(name)) {}
 
-    string getName() { return name; }
-    int getHealth() { return health; }
-    int getMoney() { return money; }
-    int getIntelligence() { return intelligence; }
-    int getReputation() { return reputation; }
-    bool getIsGameOver() { return isGameOver; }
-    string getEndingMessage() { return endingMessage; }
+    const string& name() const { return name_; }
+    int health() const { return health_; }
+    int money() const { return money_; }
+    int intelligence() const { return intelligence_; }
+    int reputation() const { return reputation_; }
+    bool isGameOver() const { return gameOver_; }
+    const string& endingMessage() const { return endingMessage_; }
 
     void modifyHealth(int amount) {
-        health += amount;
-        if (health > 100) health = 100;
-        if (health <= 0) {
-            health = 0;
-            triggerEnd("YOU DIED: You could not survive the harsh streets of FAF-City.");
+        health_ = clamp(health_ + amount, 0, 100);
+        if (health_ == 0) {
+            finish("GAME OVER: Your health reached zero in FAF City.");
         }
     }
 
-    void modifyMoney(int amount) {
-        money += amount;
-        if (money < 0) money = 0;
+    void modifyMoney(int amount) { money_ = max(0, money_ + amount); }
+    void modifyIntelligence(int amount) { intelligence_ += amount; }
+    void modifyReputation(int amount) { reputation_ += amount; }
+
+    void addItem(const string& item) {
+        inventory_.push_back(item);
+        cout << "Item obtained: " << item << '\n';
     }
 
-    void modifyIntelligence(int amount) { intelligence += amount; }
-    void modifyReputation(int amount) { reputation += amount; }
-
-    void addItem(string item) {
-        inventory.push_back(item);
-        cout << " Item obtained: " << item << "\n";
+    bool hasItem(const string& item) const {
+        return find(inventory_.begin(), inventory_.end(), item) != inventory_.end();
     }
 
-    bool hasItem(string item) {
-        for (string i : inventory) {
-            if (i == item) return true;
-        }
-        return false;
+    void finish(const string& message) {
+        gameOver_ = true;
+        endingMessage_ = message;
     }
 
-    void triggerEnd(string message) {
-        isGameOver = true;
-        endingMessage = message;
-    }
-
-    void displayStats() {
-        cout << "\nPlayer: " << name 
-             << " | HP: " << health 
-             << " | Money: $" << money 
-             << " | INT: " << intelligence 
-             << " | REP: " << reputation << "\n";
+    void displayStats() const {
+        cout << "\nPlayer: " << name_
+                  << " | HP: " << health_
+                  << " | Money: $" << money_
+                  << " | INT: " << intelligence_
+                  << " | REP: " << reputation_ << '\n';
         cout << "Inventory: ";
-        if (inventory.empty()) {
+        if (inventory_.empty()) {
             cout << "Empty";
         } else {
-            for (size_t i = 0; i < inventory.size(); i++) {
-                cout << inventory[i] << (i == inventory.size() - 1 ? "" : ", ");
+            for (size_t i = 0; i < inventory_.size(); ++i) {
+                if (i > 0) cout << ", ";
+                cout << inventory_[i];
             }
         }
         cout << "\n\n";
     }
 };
 
-// Polymorphic Effects (OCP)
-class StatEffect : public IActionEffect {
+class StatEffect final : public IActionEffect {
 private:
-    int health, money, intel, rep;
+    int health_;
+    int money_;
+    int intelligence_;
+    int reputation_;
+
 public:
-    StatEffect(int h, int m, int i, int r) {
-        health = h;
-        money = m;
-        intel = i;
-        rep = r;
-    }
-    void apply(Player& player) {
-        player.modifyHealth(health);
-        player.modifyMoney(money);
-        player.modifyIntelligence(intel);
-        player.modifyReputation(rep);
+    StatEffect(int health, int money, int intelligence, int reputation)
+        : health_(health), money_(money), intelligence_(intelligence), reputation_(reputation) {}
+
+    void apply(Player& player) override {
+        player.modifyHealth(health_);
+        player.modifyMoney(money_);
+        player.modifyIntelligence(intelligence_);
+        player.modifyReputation(reputation_);
     }
 };
 
-class ItemEffect : public IActionEffect {
+class ItemEffect final : public IActionEffect {
 private:
-    string item;
+    string item_;
+
 public:
-    ItemEffect(string itemName) {
-        item = itemName;
-    }
-    void apply(Player& player) {
-        player.addItem(item);
-    }
+    explicit ItemEffect(string item) : item_(move(item)) {}
+
+    void apply(Player& player) override { player.addItem(item_); }
 };
 
-class EndingEffect : public IActionEffect {
+class EndingEffect final : public IActionEffect {
 private:
-    string finalMessage;
+    string message_;
+
 public:
-    EndingEffect(string msg) {
-        finalMessage = msg;
-    }
-    void apply(Player& player) {
-        player.triggerEnd(finalMessage);
-    }
+    explicit EndingEffect(string message) : message_(move(message)) {}
+
+    void apply(Player& player) override { player.finish(message_); }
 };
 
-// Choice structure
 struct Choice {
     string description;
     int nextNodeId;
     string requiredItem;
-    int requiredIntel;
-    vector<IActionEffect*> effects;
+    int requiredIntelligence;
+    vector<shared_ptr<IActionEffect>> effects;
 };
 
-// Scene representation
 class StoryNode {
 private:
-    int id;
-    string text;
-    vector<Choice> choices;
+    int id_;
+    string text_;
+    vector<Choice> choices_;
 
 public:
-    StoryNode(int nodeId, string storyText) {
-        id = nodeId;
-        text = storyText;
+    StoryNode(int id, string text) : id_(id), text_(move(text)) {}
+
+    int id() const { return id_; }
+    const string& text() const { return text_; }
+    const vector<Choice>& choices() const { return choices_; }
+
+    void addChoice(string description, int nextNodeId,
+                   vector<shared_ptr<IActionEffect>> effects = {},
+                   string requiredItem = "", int requiredIntelligence = 0) {
+        choices_.push_back({move(description), nextNodeId, move(requiredItem),
+                            requiredIntelligence, move(effects)});
     }
-
-    ~StoryNode() {
-        for (Choice c : choices) {
-            for (IActionEffect* e : c.effects) {
-                delete e;
-            }
-        }
-    }
-
-    int getId() { return id; }
-    string getText() { return text; }
-
-    void addChoice(string desc, int nextNode, vector<IActionEffect*> fx = {}, string reqItem = "", int reqIntel = 0) {
-        choices.push_back({desc, nextNode, reqItem, reqIntel, fx});
-    }
-
-    void displayNode() {
-        cout << text << "\n\n";
-        for (size_t i = 0; i < choices.size(); i++) {
-            cout << i + 1 << ". " << choices[i].description;
-            if (!choices[i].requiredItem.empty()) {
-                cout << " (Requires: " << choices[i].requiredItem << ")";
-            }
-            if (choices[i].requiredIntel > 0) {
-                cout << " (Requires INT: " << choices[i].requiredIntel << ")";
-            }
-            cout << "\n";
-        }
-    }
-
-    int getChoiceCount() { return choices.size(); }
-    Choice getChoice(int index) { return choices[index]; }
 };
 
 #endif
