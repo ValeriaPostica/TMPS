@@ -1,19 +1,20 @@
 # Laboratory Work No. 2
 
 **Course:** TMPS (Software Modeling and Design Techniques)  
-**Topic:** Structural Design Patterns in FAF City: Choose Your Destiny  
+**Topic:** SOLID Principles and Design Patterns in FAF City: Choose Your Destiny  
 **Language:** C++17
 
 ## 1. Objective
 
 This laboratory continues the adventure game from Laboratory Works No. 0 and
-No. 1. The previous behavior and the previous creational patterns are kept:
+No. 1. It organizes the implementation around three SOLID principles and
+keeps three creational patterns:
 
 - Builder creates and validates `Player` objects;
 - Factory Method creates action effects from JSON;
 - Singleton stores application configuration.
 
-This laboratory adds three structural design patterns:
+The laboratory also adds three structural design patterns:
 
 1. Decorator;
 2. Composite;
@@ -34,28 +35,38 @@ player by the selected or custom name.
 lab2/
 ├── story.json              # story nodes, choices, requirements, and effects
 ├── nlohmann/json.hpp       # JSON library
-├── GameInterfaces.h        # IActionEffect and IOutputWriter
-├── StoryEntities.h         # Player, effects, choices, and story nodes
-├── StoryLoader.h           # JSON loading and effect composition
-├── GameEngine.h            # game loop and story navigation
-├── PlayerBuilder.h         # Lab 1 Builder
-├── EffectFactories.h       # Lab 1 Factory Method
-├── GameConfig.h            # Lab 1 Singleton
+├── SOLID/
+│   ├── GameInterfaces.h    # abstractions for OCP and DIP
+│   ├── StoryEntities.h     # domain objects and effect implementations
+│   └── GameEngine.h        # game loop using abstractions
 ├── CharacterOptions.h      # preset and custom character creation
-├── OutputDecorators.h      # Decorator implementation
-├── EffectComposites.h      # Composite implementation
-├── GameFacade.h            # Facade implementation
+├── StoryLoader.h           # JSON loading and effect composition
+├── Creational/
+│   ├── PlayerBuilder.h     # Lab 1 Builder
+│   ├── EffectFactories.h   # Lab 1 Factory Method
+│   └── GameConfig.h        # Lab 1 Singleton
+├── Structural/
+│   ├── OutputDecorators.h  # Decorator implementation
+│   ├── EffectComposites.h  # Composite implementation
+│   └── GameFacade.h        # Facade implementation
 ├── main.cpp                # input and application entry point
+├── tests.cpp               # unit tests
+├── run-tests.bat           # one-command test build and run
+├── README.md               # build, run, and test instructions
 └── REPORT.md               # laboratory report
 ```
 
-## 3. Existing architecture
+## 3. Domain description and existing architecture
 
 The game is a terminal-based choose-your-own-adventure application. The
 `Player` stores health, money, intelligence, reputation, inventory, and ending
 state. `StoryNode` stores narrative text and choices. `StoryLoader` reads the
 story graph from JSON, while `GameEngine` validates choices, applies effects,
 and navigates to the next node.
+
+The player explores FAF City, makes choices, gains or loses resources, and
+reaches one of several endings. The application keeps the story data separate
+from the game engine so new story nodes and effects can be added independently.
 
 The important extension points from the previous laboratories are:
 
@@ -126,19 +137,25 @@ implementation.
 
 ### 5.3 Implementation
 
-`PlayerNameOutputDecorator` implements the same `IOutputWriter` interface and
-wraps another writer. It adds the player name, then delegates the formatted
-message to the wrapped writer:
+`OutputDecorator` stores the wrapped `IOutputWriter`. The concrete decorators
+preserve the same interface, add their responsibility, and delegate to the
+wrapped writer:
 
 ```cpp
-class PlayerNameOutputDecorator final : public IOutputWriter {
-private:
+class OutputDecorator : public IOutputWriter {
+protected:
     IOutputWriter& writer_;
+
+    explicit OutputDecorator(IOutputWriter& writer) : writer_(writer) {}
+};
+
+class PlayerNameOutputDecorator final : public OutputDecorator {
+private:
     string playerName_;
 
 public:
     PlayerNameOutputDecorator(IOutputWriter& writer, string playerName)
-        : writer_(writer), playerName_(move(playerName)) {}
+        : OutputDecorator(writer), playerName_(move(playerName)) {}
 
     void write(const string& message) override {
         writer_.write(playerName_ + ", " + message);
@@ -146,25 +163,69 @@ public:
 };
 ```
 
+Source: [OutputDecorators.h](Structural/OutputDecorators.h)
+
 ### 5.4 Participants
 
 | Participant | Class |
 |---|---|
 | Component | `IOutputWriter` |
 | Concrete component | `ConsoleWriter` |
-| Decorator | `PlayerNameOutputDecorator` |
+| Decorator | `OutputDecorator` |
+| Concrete decorators | `PlayerNameOutputDecorator`, `MessagePrefixOutputDecorator`, `ColoredOutputDecorator` |
 | Client | `GameEngine` through `GameFacade` |
 
 ### 5.5 Usage
 
 ```cpp
 ConsoleWriter consoleWriter;
-PlayerNameOutputDecorator writer(consoleWriter, player.name());
+ColoredOutputDecorator coloredWriter(consoleWriter, "\033[36m");
+MessagePrefixOutputDecorator prefixedWriter(coloredWriter, "[FAF CITY]");
+PlayerNameOutputDecorator writer(prefixedWriter, player.name());
 GameEngine engine(player, writer);
 ```
 
-The engine only knows `IOutputWriter`. Additional decorators can be added later
-for timestamps, file logging, or colored output without changing the engine.
+The engine only knows `IOutputWriter`. `ColoredOutputDecorator` recognizes
+game message categories and adds appropriate ANSI colors: player statistics
+use separate colors for health, money, intelligence, reputation and inventory;
+errors are red, endings are magenta, choices are blue, prompts are green, and
+narrative messages are cyan. Additional decorators can be added later for
+timestamps or file logging without changing the engine.
+
+The concrete implementation is:
+
+```cpp
+class ColoredOutputDecorator final : public OutputDecorator {
+private:
+    string colorCode_;
+
+public:
+    ColoredOutputDecorator(IOutputWriter& writer, const string& colorCode)
+        : OutputDecorator(writer), colorCode_(colorCode) {}
+
+    void write(const string& message) override {
+        writer_.write(categoryColor(message));
+    }
+};
+```
+
+Passing `"\033[36m"` as `colorCode_` creates the default cyan output. The
+decorator is message-aware: the `Money: $500` segment is wrapped with
+`"\033[33m"` (yellow), while `HP`, `INT`, `REP`, and `Inventory` receive their
+own colors. `"\033[0m"` restores the terminal's default style.
+
+| Message category | ANSI color |
+|---|---|
+| Title and narrative | Cyan |
+| Choices and menu options | Blue |
+| Prompts and successful actions | Green |
+| Health | Red |
+| Money | Yellow |
+| Intelligence | Blue |
+| Reputation | Green |
+| Inventory | Magenta |
+| Errors and invalid choices | Red |
+| Endings and game-over messages | Magenta |
 
 ### 5.6 Benefits and trade-offs
 
@@ -217,6 +278,8 @@ public:
     }
 };
 ```
+
+Source: [EffectComposites.h](Structural/EffectComposites.h)
 
 During JSON loading, all effects belonging to a choice are placed in one
 composite. The `Choice` stores one `shared_ptr<IActionEffect>`, which can be a
@@ -285,7 +348,9 @@ public:
         config.setChoicesPerNode(3);
 
         ConsoleWriter consoleWriter;
-        PlayerNameOutputDecorator writer(consoleWriter, player.name());
+        ColoredOutputDecorator coloredWriter(consoleWriter, "\033[36m");
+        MessagePrefixOutputDecorator prefixedWriter(coloredWriter, "[FAF CITY]");
+        PlayerNameOutputDecorator writer(prefixedWriter, player.name());
         GameEngine engine(player, writer);
         StoryLoader loader;
         loader.load(config.storyFile(), engine);
@@ -293,6 +358,8 @@ public:
     }
 };
 ```
+
+Source: [GameFacade.h](Structural/GameFacade.h)
 
 The entry point only selects or creates a player and starts the facade:
 
@@ -307,7 +374,7 @@ game.run(move(player));
 | Participant | Class |
 |---|---|
 | Facade | `GameFacade` |
-| Subsystems | `GameConfig`, `StoryLoader`, `GameEngine`, `PlayerNameOutputDecorator` |
+| Subsystems | `GameConfig`, `StoryLoader`, `GameEngine`, `MessagePrefixOutputDecorator`, `PlayerNameOutputDecorator`, `ColoredOutputDecorator` |
 | Client | `main()` |
 
 ### 7.5 Benefits and trade-offs
@@ -326,8 +393,9 @@ implemented and used in the application.
 
 ### 8.1.1. Decorator pattern
 
-The `GameEngine` uses `IOutputWriter`, while `PlayerNameOutputDecorator`
-adds player-specific formatting and delegates the result to `ConsoleWriter`.
+The `GameEngine` uses `IOutputWriter`. `PlayerNameOutputDecorator`,
+`MessagePrefixOutputDecorator`, and `ColoredOutputDecorator` add formatting
+and delegate the final result to `ConsoleWriter`.
 
 ```mermaid
 classDiagram
@@ -340,10 +408,27 @@ classDiagram
         +write(message: string) void
     }
 
+    class OutputDecorator {
+        <<abstract>>
+        #writer_: IOutputWriter
+    }
+
     class PlayerNameOutputDecorator {
         -writer_: IOutputWriter
         -playerName_: string
         +PlayerNameOutputDecorator(writer, playerName)
+        +write(message: string) void
+    }
+
+    class MessagePrefixOutputDecorator {
+        -prefix_: string
+        +MessagePrefixOutputDecorator(writer, prefix)
+        +write(message: string) void
+    }
+
+    class ColoredOutputDecorator {
+        -colorCode_: string
+        +ColoredOutputDecorator(writer, colorCode)
         +write(message: string) void
     }
 
@@ -353,8 +438,11 @@ classDiagram
     }
 
     IOutputWriter <|.. ConsoleWriter
-    IOutputWriter <|.. PlayerNameOutputDecorator
-    PlayerNameOutputDecorator --> IOutputWriter : wraps
+    OutputDecorator <|-- PlayerNameOutputDecorator
+    OutputDecorator <|-- MessagePrefixOutputDecorator
+    OutputDecorator <|-- ColoredOutputDecorator
+    IOutputWriter <|.. OutputDecorator
+    OutputDecorator --> IOutputWriter : wraps
     GameEngine --> IOutputWriter : uses
 ```
 
@@ -363,13 +451,19 @@ The output flow is:
 ```mermaid
 sequenceDiagram
     participant Engine as GameEngine
+    participant Prefix as MessagePrefixOutputDecorator
     participant Decorator as PlayerNameOutputDecorator
+    participant Color as ColoredOutputDecorator
     participant Writer as ConsoleWriter
     participant Console as Console
 
     Engine->>Decorator: write(message)
     Decorator->>Decorator: add player name
-    Decorator->>Writer: write(formatted message)
+    Decorator->>Prefix: write(formatted message)
+    Prefix->>Prefix: add [FAF CITY] prefix
+    Prefix->>Color: delegate
+    Color->>Color: add ANSI color and reset codes
+    Color->>Writer: delegate
     Writer->>Console: print message
 ```
 
@@ -466,11 +560,21 @@ classDiagram
         +write(message: string) void
     }
 
+    class MessagePrefixOutputDecorator {
+        +write(message: string) void
+    }
+
+    class ColoredOutputDecorator {
+        +write(message: string) void
+    }
+
     Main --> GameFacade : calls run()
     GameFacade --> GameConfig : configures
     GameFacade --> StoryLoader : loads story
     GameFacade --> GameEngine : creates and starts
     GameFacade --> PlayerNameOutputDecorator : creates
+    GameFacade --> MessagePrefixOutputDecorator : creates
+    GameFacade --> ColoredOutputDecorator : creates
     GameEngine --> PlayerNameOutputDecorator : writes output
 ```
 
@@ -484,10 +588,12 @@ sequenceDiagram
     participant Decorator as PlayerNameOutputDecorator
     participant Loader as StoryLoader
     participant Engine as GameEngine
+    participant Color as ColoredOutputDecorator
 
     Main->>Facade: run(player)
     Facade->>Config: set story file, start node, choice count
     Facade->>Decorator: create output decorator
+    Facade->>Color: create cyan output decorator
     Facade->>Engine: create engine(player, decorator)
     Facade->>Loader: load(story file, engine)
     Loader-->>Engine: add story nodes and choices
@@ -498,7 +604,8 @@ sequenceDiagram
 
 The three patterns work together as shown below. Character selection creates a
 valid player, the facade starts the application, the loader builds composite effects from
-JSON, and the decorator adds player-specific formatting to console output.
+JSON, and the decorator chain adds player-specific formatting, a prefix, and
+cyan terminal color to console output.
 
 ```mermaid
 flowchart TD
@@ -511,7 +618,9 @@ flowchart TD
     Facade --> Loader[StoryLoader]
     Facade --> Engine[GameEngine]
     Facade --> Decorator[PlayerNameOutputDecorator]
-    Decorator --> Console[ConsoleWriter]
+    Decorator --> Prefix[MessagePrefixOutputDecorator]
+    Prefix --> Color[ColoredOutputDecorator]
+    Color --> Console[ConsoleWriter]
 
     Loader --> JSON[story.json]
     Loader --> Factories[Effect Factories]
@@ -525,7 +634,7 @@ flowchart TD
 
 The following scenarios should be checked:
 
-1. Select **The Tycoon** and confirm the player starts with 1000 money and low
+1. Select **Richie** and confirm the player starts with 1000 money and low
    intelligence.
 2. Select **The Hacker** and confirm the player starts with low health, high
    intelligence, and a Neural Chip.
@@ -536,17 +645,48 @@ The following scenarios should be checked:
    reports an explicit error.
 6. Select a choice with multiple JSON effects and verify all effects are
    applied by `CompositeEffect`.
-7. Verify game messages pass through `PlayerNameOutputDecorator`.
+7. Verify game messages pass through `PlayerNameOutputDecorator`,
+   `MessagePrefixOutputDecorator`, and `ColoredOutputDecorator`.
 8. Verify the complete game starts through `GameFacade`.
 9. Verify invalid choices, missing items, insufficient intelligence, missing
    story files, and ending effects retain their previous behavior.
 
-## 10. Compilation and execution
+## 10. Unit tests
+
+The test executable contains two focused tests for each structural pattern:
+
+| Pattern | Test | What it verifies |
+|---|---|---|
+| Decorator | `decoratorAddsResponsibility` | A decorator delegates through the shared interface and adds the player name. |
+| Decorator | `decoratorsCanBeStacked` | Two or three concrete decorators can be combined without changing the component. |
+| Decorator | `coloredDecoratorUsesMultipleGameColors` | Money is yellow, health is red, and error messages are red. |
+| Composite | `compositeAppliesLeafEffectsInOrder` | A group applies multiple leaf effects to one player. |
+| Composite | `compositeAndLeafShareTheSameInterface` | A leaf and a composite are both usable as `IActionEffect`. |
+| Facade | `facadeStartsTheConfiguredGame` | The facade configures, loads, decorates, and starts the game. |
+| Facade | `facadeRunsAnotherSubsystemPath` | The same facade coordinates a different story path. |
+
+Run them with:
+
+```powershell
+Set-Location lab2
+.\tests.exe
+```
+
+Successful output:
+
+```text
+All Lab 2 tests passed.
+```
+
+Source: [tests.cpp](tests.cpp)
+
+## 11. Compilation and execution
 
 From the repository root, compile with a C++17 compiler:
 
 ```powershell
 g++ -std=c++17 -Wall -Wextra -pedantic lab2\main.cpp -o lab2\main.exe
+g++ -std=c++17 -Wall -Wextra -pedantic lab2\tests.cpp -o lab2\tests.exe
 ```
 
 Run the program from the `lab2` directory so that `story.json` is found:
@@ -556,11 +696,12 @@ Set-Location lab2
 .\main.exe
 ```
 
-## 11. Conclusion
+## 12. Conclusion
 
 The Lab 2 implementation extends the existing game without changing the
 previous laboratory directories. Decorator adds player-specific output
-formatting, Composite models a choice containing multiple effects, and Facade
-simplifies application startup. Character presets and custom creation provide
+formatting, a game prefix, and terminal color, Composite models a choice
+containing multiple effects, and Facade simplifies application startup.
+Character presets and custom creation provide
 multiple ways to construct a valid `Player` while reusing the Lab 1 Builder
 and its validation rules.

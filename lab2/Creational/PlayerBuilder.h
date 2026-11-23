@@ -1,6 +1,6 @@
 #ifndef PLAYER_BUILDER_H
 #define PLAYER_BUILDER_H
-#include "StoryEntities.h"
+#include "../SOLID/StoryEntities.h"
 #include <stdexcept>
 #include <string>
 #include <utility>

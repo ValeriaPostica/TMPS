@@ -2,7 +2,6 @@
 #define STORY_ENTITIES_H
 #include "GameInterfaces.h"
 #include <algorithm>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <utility>
@@ -52,7 +51,6 @@ public:
 
     void addItem(const string& item) {
         inventory_.push_back(item);
-        cout << name_ << ", you obtained: " << item << '\n';
     }
 
     bool hasItem(const string& item) const {
@@ -64,22 +62,22 @@ public:
         endingMessage_ = message;
     }
 
-    void displayStats() const {
-        cout << "\nPlayer: " << name_
-                  << " | HP: " << health_
-                  << " | Money: $" << money_
-                  << " | INT: " << intelligence_
-                  << " | REP: " << reputation_ << '\n';
-        cout << "Inventory: ";
+    string statsMessage() const {
+        string message = "Player: " + name_ +
+                         " | HP: " + to_string(health_) +
+                         " | Money: $" + to_string(money_) +
+                         " | INT: " + to_string(intelligence_) +
+                         " | REP: " + to_string(reputation_) +
+                         " | Inventory: ";
         if (inventory_.empty()) {
-            cout << "Empty";
+            message += "Empty";
         } else {
             for (size_t i = 0; i < inventory_.size(); ++i) {
-                if (i > 0) cout << ", ";
-                cout << inventory_[i];
+                if (i > 0) message += ", ";
+                message += inventory_[i];
             }
         }
-        cout << "\n\n";
+        return message;
     }
 };
 

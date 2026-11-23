@@ -1,6 +1,6 @@
 #ifndef EFFECT_COMPOSITES_H
 #define EFFECT_COMPOSITES_H
-#include "StoryEntities.h"
+#include "../SOLID/StoryEntities.h"
 #include <memory>
 #include <utility>
 #include <vector>

@@ -5,6 +5,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <sstream>
 using namespace std;
 
 class GameEngine {
@@ -33,24 +34,29 @@ public:
             }
 
             const StoryNode& node = *nodeIt->second;
-            player_.displayStats();
+            writer_.write(player_.statsMessage());
             writer_.write(node.text());
             const auto& choices = node.choices();
             for (size_t i = 0; i < choices.size(); ++i) {
                 const Choice& choice = choices[i];
-                cout << i + 1 << ". " << choice.description;
+                ostringstream choiceMessage;
+                choiceMessage << i + 1 << ". " << choice.description;
                 if (!choice.requiredItem.empty()) {
-                    cout << " (Requires: " << choice.requiredItem << ")";
+                    choiceMessage << " (Requires: " << choice.requiredItem << ")";
                 }
                 if (choice.requiredIntelligence > 0) {
-                    cout << " (Requires INT: " << choice.requiredIntelligence << ")";
+                    choiceMessage << " (Requires INT: " << choice.requiredIntelligence << ")";
                 }
-                cout << '\n';
+                writer_.write(choiceMessage.str());
             }
 
-            cout << "\n" << player_.name() << ", choose an option: ";
+            writer_.write(player_.name() + ", choose an option:");
             int userChoice = 0;
             if (!(cin >> userChoice)) {
+                if (cin.eof()) {
+                    writer_.write("Input ended.");
+                    break;
+                }
                 cin.clear();
                 cin.ignore(numeric_limits<streamsize>::max(), '\n');
                 writer_.write("Please enter a number from 1 to 3.");

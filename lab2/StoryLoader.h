@@ -1,9 +1,9 @@
 #ifndef STORY_LOADER_H
 #define STORY_LOADER_H
-#include "GameEngine.h"
-#include "EffectFactories.h"
-#include "EffectComposites.h"
-#include "GameConfig.h"
+#include "SOLID/GameEngine.h"
+#include "Creational/EffectFactories.h"
+#include "Structural/EffectComposites.h"
+#include "Creational/GameConfig.h"
 #include "nlohmann/json.hpp"
 #include <fstream>
 #include <memory>

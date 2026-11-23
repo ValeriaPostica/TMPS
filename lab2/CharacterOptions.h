@@ -1,6 +1,6 @@
 #ifndef CHARACTER_OPTIONS_H
 #define CHARACTER_OPTIONS_H
-#include "PlayerBuilder.h"
+#include "Creational/PlayerBuilder.h"
 #include <iostream>
 #include <limits>
 #include <stdexcept>

@@ -1,5 +1,5 @@
 #include "CharacterOptions.h"
-#include "GameFacade.h"
+#include "Structural/GameFacade.h"
 #include <exception>
 #include <iostream>
 using namespace std;
